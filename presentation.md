@@ -1,7 +1,11 @@
 # Indexing Wikipedia with Elasticsearch
 
+---
+
 ## Objective
 Take 14GiB (compressed) of Wikipedia data and make it searchable
+
+---
 
 ## What is Elasticsearch?
 
@@ -10,23 +14,33 @@ Take 14GiB (compressed) of Wikipedia data and make it searchable
 * A distributed database that's good at searching human language
 * A distributed database that's good at searching human language and aggregation
 
+---
+
 ## How Elasticsearch Stores Documents
 
 * It stores **documents** on a **node**(1 instance)
 * Multiple nodes form a **cluster**
 * There are more schema details, but they aren't important for this talk
 
+---
+
 ## Lucene
 
 If you know what Lucene is, Elasticsearch is based on it. If you don't, you can ignore this.
 
+---
+
 ## Back to the Search
+
+---
 
 ## Desired Search Properties
 
 * Relevance (returned documents should be good matches for the query)
 * Speed (queries should return quickly)
 * Statistics (we might want some aggregate stats about the Wiki corpus)
+
+---
 
 ## Steps
 
@@ -35,17 +49,23 @@ If you know what Lucene is, Elasticsearch is based on it. If you don't, you can 
 * Load Documents into Database
 * Perform a Search
 
+---
+
 ## What Data are We Working With?
 
 * Titles
 * Redirects (an alias for a title)
 * Body Text (plus rich markup)
 
+---
+
 ## How do we Define Success?
 
 * A search for an exact article title turns it up as #1
 * A search for something missing a word or two still finds it
 * A search for a general idea or related group of words should find the most similar article.
+
+---
 
 ## How we Frame the Problem
 
@@ -73,6 +93,8 @@ FROM users
 ORDER BY score DESC
 ```
 
+---
+
 ## Elasticsearch/Lucene are Built for This
 
 Elasticsearch can answer questions like:
@@ -92,11 +114,15 @@ Elasticsearch can answer questions like:
 }
 ```
 
+---
+
 ## Let's Create a Simple Wikipedia Search Engine
 
 * If the title or a redirect exactly matches the query make that our #1 result
 * If the title is very similar to the query it should be given a very high score
 * If the body contains the query with disproportionate frequency that should boost the document's score
+
+---
 
 ## Here's a sample document we'll match against
 
@@ -107,6 +133,8 @@ Elasticsearch can answer questions like:
   "text": "The United States of America (USA), commonly referred to..."
 }
 ```
+
+---
 
 ## The Essence of Our Query
 
@@ -123,6 +151,8 @@ OR body.body_simple:"{{qs}}"^2
 OR body.body_snow:"{{qs}}"
 ```
 
+---
+
 ## Here's Our Query
 
 ```json
@@ -140,14 +170,20 @@ POST /en-wikipedia2/_search
 }
 ```
 
+---
+
 ## Making it Searchable
 
 * We need to **analyze** the text.
 * That means creating representation of the text that maximizes the machine's understanding of it.
 
+---
+
 ## Stemming
 
 ![Analysis]('img/analysis.png')
+
+---
 
 ## What is Analysis?
 
@@ -162,16 +198,22 @@ into:
 
 [Example](http://localhost:9200/en-wikipedia2/_analyze?analyzer=snowball&text=Book%20of%20Secrets%20finds%20home%20at%20in%20secret%20books%20of%20wonder&pretty=true)
 
+---
+
 ## Why Does this Make Search Fast / Accurate?
 
 When you analyze both the query and the text searches become simple lookups or use
 other efficient techniques. The analyzed text is stored in an extremely efficient to search
 internal representation.
 
+---
+
 ## Which Analyzers To Use?
 
 * **Snowball** This analyzer is great for stemming English words.
 * **Simple** Split the text on whitespace, then lowercase it
+
+---
 
 ## Here's Our Query
 
@@ -190,7 +232,11 @@ POST /en-wikipedia2/_search
 }
 ```
 
+---
+
 ## Some Fun Tricks
+
+---
 
 ## Get the Most Common Words in Titles
 
@@ -206,6 +252,8 @@ GET /en-wikipedia2/_search?search_type=count
 }
 ```
 
+---
+
 ## Perform a Fast Autocomplete
 
 ```json
@@ -218,6 +266,8 @@ GET en-wikipedia2/_suggest
   }
 }
 ```
+
+---
 
 ## Get the United States article's MLT docs
 
@@ -237,6 +287,7 @@ GET en-wikipedia2/_search
 }
 ```
 
+---
 
 # Get the United States Environmental Protection Agency article's MLT docs
 ```json
@@ -254,6 +305,8 @@ GET en-wikipedia2/_search
   }
 }
 ```
+
+---
 
 # More Goodies
 
